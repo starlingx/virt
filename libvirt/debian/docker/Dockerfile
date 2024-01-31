@@ -32,7 +32,6 @@ RUN apt-get -y update \
     libvirt-daemon-system-systemd \
     libvirt-login-shell \
     pm-utils \
-    qemu \
     qemu-block-extra \
     qemu-system-common \
     qemu-system-data \
