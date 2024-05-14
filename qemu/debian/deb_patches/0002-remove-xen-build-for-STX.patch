@@ -1,4 +1,4 @@
-From 3f65615b7108b1e50cf0647a6eb8cbef22dc14be Mon Sep 17 00:00:00 2001
+From 341fe8143926c2dda50bb0ae931ef2e14bcbe47d Mon Sep 17 00:00:00 2001
 From: Jackie Huang <jackie.huang@windriver.com>
 Date: Mon, 12 Jun 2023 21:42:44 -0700
 Subject: [PATCH] remove xen build for STX
@@ -6,11 +6,11 @@ Subject: [PATCH] remove xen build for STX
 Signed-off-by: Jackie Huang <jackie.huang@windriver.com>
 ---
  debian/control | 14 --------------
- debian/rules   | 31 -------------------------------
- 2 files changed, 45 deletions(-)
+ debian/rules   | 33 ---------------------------------
+ 2 files changed, 47 deletions(-)
 
 diff --git a/debian/control b/debian/control
-index 32600f51..16b25abf 100644
+index adf8946..d0fb7e8 100644
 --- a/debian/control
 +++ b/debian/control
 @@ -247,20 +247,6 @@ Description: QEMU full system emulation binaries (x86)
@@ -35,7 +35,7 @@ index 32600f51..16b25abf 100644
  Architecture: amd64 arm arm64 armel armhf hppa i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el riscv64 s390x sparc sparc64 x32
  Multi-Arch: foreign
 diff --git a/debian/rules b/debian/rules
-index d95b4af0..6743f90a 100755
+index 78c1296..b0fd791 100755
 --- a/debian/rules
 +++ b/debian/rules
 @@ -40,7 +40,6 @@ BUILD_PACKAGES := $(shell dh_listpackages)
@@ -46,7 +46,7 @@ index d95b4af0..6743f90a 100755
  PKGVERSION = Debian ${DEB_VERSION}
  SAVEMODDIR = /run/qemu/$(shell echo -n "${PKGVERSION}" | tr --complement '[:alnum:]+-.~' '_')
  sysdataidir = debian/qemu-system-data/usr/share/qemu
-@@ -306,36 +305,6 @@ ifeq ($(filter-out $(DEB_HOST_ARCH),amd64)${enable_system},enable)
+@@ -306,38 +305,6 @@ ifeq ($(filter-out $(DEB_HOST_ARCH),amd64)${enable_system},enable)
  qemu-builds += microvm
  endif
  
@@ -65,8 +65,10 @@ index d95b4af0..6743f90a 100755
 -		--enable-xen-pci-passthrough \
 -		--disable-tcg --disable-kvm \
 -		--audio-drv-list= \
+-		--enable-libusb \
 -		--enable-vnc --enable-vnc-jpeg \
 -		--enable-spice \
+-		--enable-virtfs --enable-attr --enable-cap-ng \
 -		${QEMU_XEN_CONFIGURE_OPTIONS}
 -	touch $@
 -build-xen: b/xen/built
@@ -84,5 +86,5 @@ index d95b4af0..6743f90a 100755
  # linux-user-static build
  configure-user-static: b/user-static/configured
 -- 
-2.39.0
+2.25.1
 
