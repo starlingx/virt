@@ -26,13 +26,15 @@ Removed packages:
 Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
 [Rebased original changes to the qemu 7.2 version]
 Signed-off-by: david.liu <david.liu@windriver.com>
+[Aligned with 7.2, updated configure with --target-list]
+Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
 ---
  debian/control | 232 +++----------------------------------------------
- debian/rules   |  93 +-------------------
- 2 files changed, 15 insertions(+), 310 deletions(-)
+ debian/rules   |  94 +-------------------
+ 2 files changed, 16 insertions(+), 310 deletions(-)
 
 diff --git a/debian/control b/debian/control
-index 9a5a3fab..32600f51 100644
+index 9a5a3fab..adf89468 100644
 --- a/debian/control
 +++ b/debian/control
 @@ -23,14 +23,14 @@ Build-Depends: debhelper-compat (= 13),
@@ -319,7 +321,7 @@ index 9a5a3fab..32600f51 100644
  Package: qemu-utils
  Architecture: amd64 arm arm64 armel armhf hppa i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el riscv64 s390x sparc sparc64 x32
 diff --git a/debian/rules b/debian/rules
-index d2cd28e9..908b643a 100755
+index 0be82012..1c4b28f4 100755
 --- a/debian/rules
 +++ b/debian/rules
 @@ -84,14 +84,10 @@ endif
@@ -354,7 +356,15 @@ index d2cd28e9..908b643a 100755
  endif	# enable_linux_user
  
  sysdata-components :=
-@@ -441,39 +431,6 @@ endif
+@@ -132,6 +122,7 @@ b/qemu/configured: configure
+ 	    ../../configure ${common_configure_opts} --disable-user \
+ 		--${enable_system}-system \
+ 		--${enable_linux_user}-linux-user \
++		--target-list=i386-softmmu,x86_64-softmmu \
+ 		--disable-xen \
+ 		--enable-modules \
+ 		--enable-module-upgrades \
+@@ -442,39 +433,6 @@ endif
  ##############################################
  ### firmware, qemu-user-data package
  
@@ -394,7 +404,7 @@ index d2cd28e9..908b643a 100755
  
  build-vof: b/vof/vof.bin
  b/vof/vof.bin: | b
-@@ -535,50 +492,6 @@ install-palcode-clipper: b/qemu-palcode/palcode-clipper
+@@ -536,50 +494,6 @@ install-palcode-clipper: b/qemu-palcode/palcode-clipper
  	install -m 0644 $< ${sysdataidir}/palcode-clipper
  sysdata-components += palcode-clipper
  
@@ -446,5 +456,5 @@ index d2cd28e9..908b643a 100755
  build-vbootrom: b/vbootrom/.built
  b/vbootrom/.built: | b
 -- 
-2.30.2
+2.34.1
 
