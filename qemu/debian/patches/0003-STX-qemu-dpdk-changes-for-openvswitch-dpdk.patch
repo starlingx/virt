@@ -7,14 +7,16 @@ Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
 Signed-off-by: Rafael Falcao <Rafael.VieiraFalcao@windriver.com>
 [Rebased original changes to the qemu 7.2 version]
 Signed-off-by: david.liu <david.liu@windriver.com>
+[Reordered custom DPDK args parsing on QEMU 7.2]
+Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
 ---
- configure           | 27 +++++++++++++++++
+ configure           | 27 +++++++++++++++++++
  hw/net/virtio-net.c |  5 ++++
- softmmu/vl.c        | 70 ++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 101 insertions(+), 1 deletion(-)
+ softmmu/vl.c        | 66 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 98 insertions(+)
 
 diff --git a/configure b/configure
-index 5f1828f1..6b92b5cb 100755
+index 26c7bc51..c5810ea3 100755
 --- a/configure
 +++ b/configure
 @@ -853,6 +853,11 @@ for opt do
@@ -98,7 +100,7 @@ index aba12759..01ca6015 100644
      offset = i = 0;
  
 diff --git a/softmmu/vl.c b/softmmu/vl.c
-index a1720fe4..6c68f123 100644
+index 333c3be2..039df6c4 100644
 --- a/softmmu/vl.c
 +++ b/softmmu/vl.c
 @@ -1583,6 +1583,35 @@ static const QEMUOption *lookup_opt(int argc, char **argv,
@@ -137,25 +139,14 @@ index a1720fe4..6c68f123 100644
  static MachineClass *select_machine(QDict *qdict, Error **errp)
  {
      const char *optarg = qdict_get_try_str(qdict, "type");
-@@ -2644,6 +2673,11 @@ void qemu_init(int argc, char **argv)
-     MachineClass *machine_class;
+@@ -2645,6 +2674,40 @@ void qemu_init(int argc, char **argv)
      bool userconfig = true;
      FILE *vmstate_dump_file = NULL;
-+    
+ 
 +#ifdef CONFIG_ENABLE_DPDK
 +    bool use_dpdk = false;
 +    int retval;
-+#endif
- 
-     qemu_add_opts(&qemu_drive_opts);
-     qemu_add_drive_opts(&qemu_legacy_drive_opts);
-@@ -2680,7 +2714,38 @@ void qemu_init(int argc, char **argv)
- 
-     error_init(argv[0]);
-     qemu_init_exec_dir(argv[0]);
--
-+    
-+#ifdef CONFIG_ENABLE_DPDK
++
 +    /* need to check for -enable-dpdk before calling rte_eal_init.  If
 +     * it is not found, don't call  rte_eal_init */
 +    optind = 1;
@@ -185,11 +176,11 @@ index a1720fe4..6c68f123 100644
 +        argv += retval;
 +    }
 +#endif
-+    
-     qemu_init_arch_modules();
- 
-     qemu_init_subsystems();
-@@ -3532,6 +3597,9 @@ void qemu_init(int argc, char **argv)
++
+     qemu_add_opts(&qemu_drive_opts);
+     qemu_add_drive_opts(&qemu_legacy_drive_opts);
+     qemu_add_drive_opts(&qemu_common_drive_opts);
+@@ -3532,6 +3595,9 @@ void qemu_init(int argc, char **argv)
      cpu_timers_init();
  
      user_register_global_props();
@@ -200,5 +191,5 @@ index a1720fe4..6c68f123 100644
  
      configure_rtc(qemu_find_opts_singleton("rtc"));
 -- 
-2.30.2
+2.34.1
 
