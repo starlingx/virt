@@ -7,3 +7,7 @@
 0007-STX-Stop-processing-memory-stats-if-balloon-info.patch
 0008-STX-Increase-timeout-for-connecting-to-monitor.patch
 0009-STX-pci-sriov-perform-limited-retry-on-netlink.patch
+0010-qemu-capabilities-Introduce-QEMU_CAPS_OBJECT_QAPIFIE.patch
+0011-qemu-monitor-Make-wrapping-of-props-of-object-add-op.patch
+0012-qemuMonitorCreateObjectPropsWrap-Open-code-in-qemuBu.patch
+0013-qemu-monitor-Don-t-add-props-wrapper-if-qemu-has-QEM.patch

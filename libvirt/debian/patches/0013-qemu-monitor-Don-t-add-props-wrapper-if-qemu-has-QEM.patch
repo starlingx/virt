@@ -1,0 +1,49 @@
+From 26175ffbda7997115b3a168061e62008d7136bd4 Mon Sep 17 00:00:00 2001
+From: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+Date: Wed, 18 Sep 2024 19:02:56 -0300
+Subject: [PATCH] qemu: monitor: Don't add 'props' wrapper if qemu has
+ QEMU_CAPS_OBJECT_QAPIFIED
+
+Set 'objectAddNoWrap' when the capability is present.
+
+Signed-off-by: Peter Krempa <pkrempa@redhat.com>
+Reviewed-by: Michal Privoznik <mprivozn@redhat.com>
+[ Patch defuzzed for libvirt 7.0.0]
+Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+---
+ src/qemu/qemu_monitor.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/qemu/qemu_monitor.c b/src/qemu/qemu_monitor.c
+index 4665f451640..5fb4d32678f 100644
+--- a/src/qemu/qemu_monitor.c
++++ b/src/qemu/qemu_monitor.c
+@@ -32,6 +32,7 @@
+ #include "qemu_monitor_json.h"
+ #include "qemu_domain.h"
+ #include "qemu_process.h"
++#include "qemu_capabilities.h"
+ #include "virerror.h"
+ #include "viralloc.h"
+ #include "virlog.h"
+@@ -672,6 +673,7 @@ qemuMonitorOpenInternal(virDomainObjPtr vm,
+                         qemuMonitorCallbacksPtr cb,
+                         void *opaque)
+ {
++    qemuDomainObjPrivatePtr priv = vm->privateData;
+     qemuMonitorPtr mon;
+     g_autoptr(GError) gerr = NULL;
+ 
+@@ -704,6 +706,9 @@ qemuMonitorOpenInternal(virDomainObjPtr vm,
+     mon->cb = cb;
+     mon->callbackOpaque = opaque;
+ 
++    if (priv)
++        mon->objectAddNoWrap = virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_OBJECT_QAPIFIED);
++
+     if (virSetCloseExec(mon->fd) < 0) {
+         virReportError(VIR_ERR_INTERNAL_ERROR,
+                        "%s", _("Unable to set monitor close-on-exec flag"));
+-- 
+2.34.1
+

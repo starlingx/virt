@@ -1,0 +1,197 @@
+From 150c1d229e2f3a24784875cb9e7de8b60bee5cb5 Mon Sep 17 00:00:00 2001
+From: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+Date: Wed, 18 Sep 2024 18:57:40 -0300
+Subject: [PATCH] qemu: monitor: Make wrapping of 'props' of 'object-add'
+ optional
+
+Construct the JSON object which is used for object-add without the
+'props' wrapper and add the wrapper only in the monitor code.
+
+This simplifies the JSON->commandline generator in the first place and
+also prepares for upcoming qemu where 'props' will be removed.
+
+Signed-off-by: Peter Krempa <pkrempa@redhat.com>
+Reviewed-by: Michal Privoznik <mprivozn@redhat.com>
+[ Patch defuzzed for libvirt 7.0.0]
+Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+---
+ src/qemu/qemu_monitor.c | 66 ++++++++++++++++++++++++++++-------------
+ src/util/virqemu.c      | 34 +++++++--------------
+ 2 files changed, 56 insertions(+), 44 deletions(-)
+
+diff --git a/src/qemu/qemu_monitor.c b/src/qemu/qemu_monitor.c
+index ac8960cfc45..2e280b82689 100644
+--- a/src/qemu/qemu_monitor.c
++++ b/src/qemu/qemu_monitor.c
+@@ -109,6 +109,9 @@ struct _qemuMonitor {
+     qemuMonitorReportDomainLogError logFunc;
+     void *logOpaque;
+     virFreeCallback logDestroy;
++
++    /* true if qemu no longer wants 'props' sub-object of object-add */
++    bool objectAddNoWrap;
+ };
+ 
+ /**
+@@ -3031,14 +3034,11 @@ qemuMonitorCreateObjectPropsWrap(const char *type,
+                                  const char *alias,
+                                  virJSONValuePtr *props)
+ {
+-    virJSONValuePtr ret;
++    if (virJSONValueObjectPrependString(*props, "id", alias) < 0 ||
++        virJSONValueObjectPrependString(*props, "qom-type", type))
++        return NULL;
+ 
+-    ignore_value(virJSONValueObjectCreate(&ret,
+-                                          "s:qom-type", type,
+-                                          "s:id", alias,
+-                                          "A:props", props,
+-                                          NULL));
+-    return ret;
++    return g_steal_pointer(props);
+ }
+ 
+ 
+@@ -3058,26 +3058,27 @@ qemuMonitorCreateObjectProps(virJSONValuePtr *propsret,
+                              const char *alias,
+                              ...)
+ {
+-    virJSONValuePtr props = NULL;
+-    int ret = -1;
++    g_autoptr(virJSONValue) props = NULL;
++    int rc;
+     va_list args;
+ 
+-    *propsret = NULL;
++    if (virJSONValueObjectCreate(&props,
++                                 "s:qom-type", type,
++                                 "s:id", alias,
++                                 NULL) < 0)
++        return -1;
+ 
+     va_start(args, alias);
+ 
+-    if (virJSONValueObjectCreateVArgs(&props, args) < 0)
+-        goto cleanup;
++    rc = virJSONValueObjectAddVArgs(props, args);
+ 
+-    if (!(*propsret = qemuMonitorCreateObjectPropsWrap(type, alias, &props)))
+-        goto cleanup;
++    va_end(args);
+ 
+-    ret = 0;
++    if (rc < 0)
++        return -1;
+ 
+- cleanup:
+-    virJSONValueFree(props);
+-    va_end(args);
+-    return ret;
++    *propsret = g_steal_pointer(&props);
++    return 0;
+ }
+ 
+ 
+@@ -3097,6 +3098,7 @@ qemuMonitorAddObject(qemuMonitorPtr mon,
+                      virJSONValuePtr *props,
+                      char **alias)
+ {
++    g_autoptr(virJSONValue) pr = NULL;
+     const char *type = NULL;
+     const char *id = NULL;
+     g_autofree char *aliasCopy = NULL;
+@@ -3124,7 +3126,31 @@ qemuMonitorAddObject(qemuMonitorPtr mon,
+     if (alias)
+         aliasCopy = g_strdup(id);
+ 
+-    if (qemuMonitorJSONAddObject(mon, props) < 0)
++    if (mon->objectAddNoWrap) {
++        pr = g_steal_pointer(props);
++    } else {
++        /* we need to create a wrapper which has the 'qom-type' and 'id' and
++         * store everything else under a 'props' sub-object */
++        g_autoptr(virJSONValue) typeobj = NULL;
++        g_autoptr(virJSONValue) idobj = NULL;
++
++        ignore_value(virJSONValueObjectRemoveKey(*props, "qom-type", &typeobj));
++        ignore_value(virJSONValueObjectRemoveKey(*props, "id", &idobj));
++
++        if (!virJSONValueObjectGetKey(*props, 0)) {
++            virJSONValueFree(*props);
++            *props = NULL;
++        }
++
++        if (virJSONValueObjectCreate(&pr,
++                                     "s:qom-type", type,
++                                     "s:id", id,
++                                     "A:props", props,
++                                     NULL) < 0)
++            return -1;
++    }
++
++    if (qemuMonitorJSONAddObject(mon, &pr) < 0)
+         return -1;
+ 
+     if (alias)
+diff --git a/src/util/virqemu.c b/src/util/virqemu.c
+index c4b6e8b3db2..a6011e55c9f 100644
+--- a/src/util/virqemu.c
++++ b/src/util/virqemu.c
+@@ -319,12 +319,13 @@ virQEMUBuildNetdevCommandlineFromJSON(virJSONValuePtr props,
+ }
+ 
+ 
+-static int
+-virQEMUBuildObjectCommandlineFromJSONInternal(virBufferPtr buf,
+-                                              const char *type,
+-                                              const char *alias,
+-                                              virJSONValuePtr props)
++int
++virQEMUBuildObjectCommandlineFromJSON(virBufferPtr buf,
++                                      virJSONValuePtr objprops)
+ {
++    const char *type = virJSONValueObjectGetString(objprops, "qom-type");
++    const char *alias = virJSONValueObjectGetString(objprops, "id");
++
+     if (!type || !alias) {
+         virReportError(VIR_ERR_INTERNAL_ERROR,
+                        _("missing 'type'(%s) or 'alias'(%s) field of QOM 'object'"),
+@@ -332,31 +333,16 @@ virQEMUBuildObjectCommandlineFromJSONInternal(virBufferPtr buf,
+         return -1;
+     }
+ 
+-    virBufferAsprintf(buf, "%s,id=%s", type, alias);
++    virBufferAsprintf(buf, "%s,", type);
+ 
+-    if (props) {
+-        virBufferAddLit(buf, ",");
+-        if (virQEMUBuildCommandLineJSON(props, buf, NULL, false,
+-                                virQEMUBuildCommandLineJSONArrayBitmap) < 0)
+-            return -1;
+-    }
++    if (virQEMUBuildCommandLineJSON(objprops, buf, "qom-type", false,
++                                    virQEMUBuildCommandLineJSONArrayBitmap) < 0)
++        return -1;
+ 
+     return 0;
+ }
+ 
+ 
+-int
+-virQEMUBuildObjectCommandlineFromJSON(virBufferPtr buf,
+-                                      virJSONValuePtr objprops)
+-{
+-    const char *type = virJSONValueObjectGetString(objprops, "qom-type");
+-    const char *alias = virJSONValueObjectGetString(objprops, "id");
+-    virJSONValuePtr props = virJSONValueObjectGetObject(objprops, "props");
+-
+-    return virQEMUBuildObjectCommandlineFromJSONInternal(buf, type, alias, props);
+-}
+-
+-
+ char *
+ virQEMUBuildDriveCommandlineFromJSON(virJSONValuePtr srcdef)
+ {
+-- 
+2.34.1
+
