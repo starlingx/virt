@@ -1,0 +1,261 @@
+From 29318399667114b3dd8a054f7ef898b3ba74828d Mon Sep 17 00:00:00 2001
+From: Daniel Berrange <berrange@redhat.com>
+Date: Tue, 16 Feb 2021 12:36:15 +0000
+Subject: [PATCH] qemu: remove support for generating yes|no boolean options
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+All callers are now using the on|off syntax, so yes|no is a unreachable
+code path.
+
+Reviewed-by: Peter Krempa <pkrempa@redhat.com>
+Signed-off-by: Daniel P. Berrangé <berrange@redhat.com>
+[ Patch defuzzed for libvirt 7.0.0]
+Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+---
+ src/util/virqemu.c          | 48 +++++++++++++------------------------
+ src/util/virqemu.h          | 10 +++-----
+ tests/qemucommandutiltest.c | 10 ++++----
+ 3 files changed, 24 insertions(+), 44 deletions(-)
+
+diff --git a/src/util/virqemu.c b/src/util/virqemu.c
+index a6011e5..aa322be 100644
+--- a/src/util/virqemu.c
++++ b/src/util/virqemu.c
+@@ -37,7 +37,6 @@ struct virQEMUCommandLineJSONIteratorData {
+     const char *prefix;
+     virBufferPtr buf;
+     const char *skipKey;
+-    bool onOff;
+     virQEMUBuildCommandLineJSONArrayFormatFunc arrayFunc;
+ };
+ 
+@@ -47,7 +46,6 @@ virQEMUBuildCommandLineJSONRecurse(const char *key,
+                                    virJSONValuePtr value,
+                                    virBufferPtr buf,
+                                    const char *skipKey,
+-                                   bool onOff,
+                                    virQEMUBuildCommandLineJSONArrayFormatFunc arrayFunc,
+                                    bool nested);
+ 
+@@ -57,8 +55,7 @@ int
+ virQEMUBuildCommandLineJSONArrayBitmap(const char *key,
+                                        virJSONValuePtr array,
+                                        virBufferPtr buf,
+-                                       const char *skipKey G_GNUC_UNUSED,
+-                                       bool onOff G_GNUC_UNUSED)
++                                       const char *skipKey G_GNUC_UNUSED)
+ {
+     ssize_t pos = -1;
+     ssize_t end;
+@@ -87,8 +84,7 @@ int
+ virQEMUBuildCommandLineJSONArrayNumbered(const char *key,
+                                          virJSONValuePtr array,
+                                          virBufferPtr buf,
+-                                         const char *skipKey,
+-                                         bool onOff)
++                                         const char *skipKey)
+ {
+     virJSONValuePtr member;
+     size_t i;
+@@ -99,7 +95,7 @@ virQEMUBuildCommandLineJSONArrayNumbered(const char *key,
+         member = virJSONValueArrayGet((virJSONValuePtr) array, i);
+         prefix = g_strdup_printf("%s.%zu", key, i);
+ 
+-        if (virQEMUBuildCommandLineJSONRecurse(prefix, member, buf, skipKey, onOff,
++        if (virQEMUBuildCommandLineJSONRecurse(prefix, member, buf, skipKey,
+                                                virQEMUBuildCommandLineJSONArrayNumbered,
+                                                true) < 0)
+             return 0;
+@@ -125,8 +121,7 @@ static int
+ virQEMUBuildCommandLineJSONArrayObjectsStr(const char *key,
+                                            virJSONValuePtr array,
+                                            virBufferPtr buf,
+-                                           const char *skipKey G_GNUC_UNUSED,
+-                                           bool onOff G_GNUC_UNUSED)
++                                           const char *skipKey G_GNUC_UNUSED)
+ {
+     g_auto(virBuffer) tmp = VIR_BUFFER_INITIALIZER;
+     size_t i;
+@@ -163,11 +158,11 @@ virQEMUBuildCommandLineJSONIterate(const char *key,
+         tmpkey = g_strdup_printf("%s.%s", data->prefix, key);
+ 
+         return virQEMUBuildCommandLineJSONRecurse(tmpkey, value, data->buf,
+-                                                  data->skipKey, data->onOff,
++                                                  data->skipKey,
+                                                   data->arrayFunc, false);
+     } else {
+         return virQEMUBuildCommandLineJSONRecurse(key, value, data->buf,
+-                                                  data->skipKey, data->onOff,
++                                                  data->skipKey,
+                                                   data->arrayFunc, false);
+     }
+ }
+@@ -178,11 +173,10 @@ virQEMUBuildCommandLineJSONRecurse(const char *key,
+                                    virJSONValuePtr value,
+                                    virBufferPtr buf,
+                                    const char *skipKey,
+-                                   bool onOff,
+                                    virQEMUBuildCommandLineJSONArrayFormatFunc arrayFunc,
+                                    bool nested)
+ {
+-    struct virQEMUCommandLineJSONIteratorData data = { key, buf, skipKey, onOff, arrayFunc };
++    struct virQEMUCommandLineJSONIteratorData data = { key, buf, skipKey, arrayFunc };
+     virJSONType type = virJSONValueGetType(value);
+     virJSONValuePtr elem;
+     bool tmp;
+@@ -207,18 +201,10 @@ virQEMUBuildCommandLineJSONRecurse(const char *key,
+ 
+     case VIR_JSON_TYPE_BOOLEAN:
+         virJSONValueGetBoolean(value, &tmp);
+-        if (onOff) {
+-            if (tmp)
+-                virBufferAsprintf(buf, "%s=on,", key);
+-            else
+-                virBufferAsprintf(buf, "%s=off,", key);
+-        } else {
+-            if (tmp)
+-                virBufferAsprintf(buf, "%s=yes,", key);
+-            else
+-                virBufferAsprintf(buf, "%s=no,", key);
+-        }
+-
++        if (tmp)
++            virBufferAsprintf(buf, "%s=on,", key);
++        else
++            virBufferAsprintf(buf, "%s=off,", key);
+         break;
+ 
+     case VIR_JSON_TYPE_ARRAY:
+@@ -229,7 +215,7 @@ virQEMUBuildCommandLineJSONRecurse(const char *key,
+             return -1;
+         }
+ 
+-        if (!arrayFunc || arrayFunc(key, value, buf, skipKey, onOff) < 0) {
++        if (!arrayFunc || arrayFunc(key, value, buf, skipKey) < 0) {
+             /* fallback, treat the array as a non-bitmap, adding the key
+              * for each member */
+             for (i = 0; i < virJSONValueArraySize(value); i++) {
+@@ -237,7 +223,7 @@ virQEMUBuildCommandLineJSONRecurse(const char *key,
+ 
+                 /* recurse to avoid duplicating code */
+                 if (virQEMUBuildCommandLineJSONRecurse(key, elem, buf, skipKey,
+-                                                       onOff, arrayFunc, true) < 0)
++                                                       arrayFunc, true) < 0)
+                     return -1;
+             }
+         }
+@@ -265,7 +251,6 @@ virQEMUBuildCommandLineJSONRecurse(const char *key,
+  * @value: json object containing the value
+  * @buf: otuput buffer
+  * @skipKey: name of key that will be handled separately by caller
+- * @onOff: Use 'on' and 'off' for boolean values rather than 'yes' and 'no'
+  * @arrayFunc: array formatter function to allow for different syntax
+  *
+  * Formats JSON value object into command line parameters suitable for use with
+@@ -277,10 +262,9 @@ int
+ virQEMUBuildCommandLineJSON(virJSONValuePtr value,
+                             virBufferPtr buf,
+                             const char *skipKey,
+-                            bool onOff,
+                             virQEMUBuildCommandLineJSONArrayFormatFunc array)
+ {
+-    if (virQEMUBuildCommandLineJSONRecurse(NULL, value, buf, skipKey, onOff, array, false) < 0)
++    if (virQEMUBuildCommandLineJSONRecurse(NULL, value, buf, skipKey, array, false) < 0)
+         return -1;
+ 
+     virBufferTrim(buf, ",");
+@@ -311,7 +295,7 @@ virQEMUBuildNetdevCommandlineFromJSON(virJSONValuePtr props,
+ 
+     virBufferAsprintf(&buf, "%s,", type);
+ 
+-    if (virQEMUBuildCommandLineJSON(props, &buf, "type", true,
++    if (virQEMUBuildCommandLineJSON(props, &buf, "type",
+                                     virQEMUBuildCommandLineJSONArrayObjectsStr) < 0)
+         return NULL;
+ 
+@@ -348,7 +332,7 @@ virQEMUBuildDriveCommandlineFromJSON(virJSONValuePtr srcdef)
+ {
+     g_auto(virBuffer) buf = VIR_BUFFER_INITIALIZER;
+ 
+-    if (virQEMUBuildCommandLineJSON(srcdef, &buf, NULL, false,
++    if (virQEMUBuildCommandLineJSON(srcdef, &buf, NULL,
+                                     virQEMUBuildCommandLineJSONArrayNumbered) < 0)
+         return NULL;
+ 
+diff --git a/src/util/virqemu.h b/src/util/virqemu.h
+index b81efc7..849b7df 100644
+--- a/src/util/virqemu.h
++++ b/src/util/virqemu.h
+@@ -29,23 +29,19 @@
+ typedef int (*virQEMUBuildCommandLineJSONArrayFormatFunc)(const char *key,
+                                                           virJSONValuePtr array,
+                                                           virBufferPtr buf,
+-                                                          const char *skipKey,
+-                                                          bool onOff);
++                                                          const char *skipKey);
+ int virQEMUBuildCommandLineJSONArrayBitmap(const char *key,
+                                            virJSONValuePtr array,
+                                            virBufferPtr buf,
+-                                           const char *skipKey,
+-                                           bool onOff);
++                                           const char *skipKey);
+ int virQEMUBuildCommandLineJSONArrayNumbered(const char *key,
+                                              virJSONValuePtr array,
+                                              virBufferPtr buf,
+-                                             const char *skipKey,
+-                                             bool onOff);
++                                             const char *skipKey);
+ 
+ int virQEMUBuildCommandLineJSON(virJSONValuePtr value,
+                                 virBufferPtr buf,
+                                 const char *skipKey,
+-                                bool onOff,
+                                 virQEMUBuildCommandLineJSONArrayFormatFunc array);
+ 
+ char *
+diff --git a/tests/qemucommandutiltest.c b/tests/qemucommandutiltest.c
+index 305f59e..6291c3b 100644
+--- a/tests/qemucommandutiltest.c
++++ b/tests/qemucommandutiltest.c
+@@ -47,7 +47,7 @@ testQemuCommandBuildFromJSON(const void *opaque)
+         return -1;
+     }
+ 
+-    if (virQEMUBuildCommandLineJSON(val, &buf, NULL, false, data->arrayfunc) < 0) {
++    if (virQEMUBuildCommandLineJSON(val, &buf, NULL, data->arrayfunc) < 0) {
+         fprintf(stderr,
+                 "\nvirQEMUBuildCommandlineJSON failed process JSON:\n%s\n",
+                 data->props);
+@@ -99,8 +99,8 @@ mymain(void)
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"string\":\"qwer\"}", "string=qwer");
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"string\":\"qw,e,r\"}", "string=qw,,e,,r");
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"number\":1234}", "number=1234");
+-    DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"boolean\":true}", "boolean=yes");
+-    DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"boolean\":false}", "boolean=no");
++    DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"boolean\":true}", "boolean=on");
++    DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"boolean\":false}", "boolean=off");
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"bitmap\":[]}", NULL);
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"bitmap\":[0]}", "bitmap=0");
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"bitmap\":[1,3,5]}",
+@@ -113,14 +113,14 @@ mymain(void)
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"array\":[\"bleah\",\"qwerty\",1]}",
+                                      "array=bleah,array=qwerty,array=1");
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"boolean\":true,\"hyphen-name\":1234,\"some_string\":\"bleah\"}",
+-                                     "boolean=yes,hyphen-name=1234,some_string=bleah");
++                                     "boolean=on,hyphen-name=1234,some_string=bleah");
+     DO_TEST_COMMAND_OBJECT_FROM_JSON("{\"nest\": {\"boolean\":true,"
+                                                  "\"hyphen-name\":1234,"
+                                                  "\"some_string\":\"bleah\","
+                                                  "\"bleah\":\"bl,eah\""
+                                                  "}"
+                                      "}",
+-                                     "nest.boolean=yes,nest.hyphen-name=1234,"
++                                     "nest.boolean=on,nest.hyphen-name=1234,"
+                                      "nest.some_string=bleah,nest.bleah=bl,,eah");
+     DO_TEST_COMMAND_DRIVE_FROM_JSON("{\"driver\":\"gluster\","
+                                      "\"volume\":\"test\","
+-- 
+2.34.1
+

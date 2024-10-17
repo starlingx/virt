@@ -25,3 +25,6 @@ CVE-2024-2494.patch
 0011-qemu-monitor-Make-wrapping-of-props-of-object-add-op.patch
 0012-qemuMonitorCreateObjectPropsWrap-Open-code-in-qemuBu.patch
 0013-qemu-monitor-Don-t-add-props-wrapper-if-qemu-has-QEM.patch
+0014-qemu-remove-support-for-generating-yes-no-boolean-op.patch
+0015-qemu-command-Use-JSON-for-QAPIfied-object-directly.patch
+0016-qemu-capabilities-Enable-detection-of-QEMU_CAPS_OBJE.patch
