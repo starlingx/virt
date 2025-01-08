@@ -5,17 +5,27 @@
       - stx-release-notes-jobs
     check:
       jobs:
-        - openstack-tox-pep8
-        - openstack-tox-linters
+        - stx-virt-tox-pep8
+        - stx-virt-tox-linters
         - stx-virt-pylint
     gate:
       jobs:
-        - openstack-tox-pep8
-        - openstack-tox-linters
+        - stx-virt-tox-pep8
+        - stx-virt-tox-linters
         - stx-virt-pylint
     post:
       jobs:
         - stx-virt-upload-git-mirror
+
+- job:
+    name: stx-virt-tox-linters
+    parent: openstack-tox-linters
+    nodeset: debian-bullseye
+
+- job:
+    name: stx-virt-tox-pep8
+    parent: openstack-tox-pep8
+    nodeset: debian-bullseye
 
 # This is the common base job definition for StarlingX flock services
 - job:
