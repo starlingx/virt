@@ -5,24 +5,17 @@
       - stx-release-notes-jobs
     check:
       jobs:
-        - local-tox-pep8
-        - openstack-tox-linters
+        - stx-tox-pep8
+        - stx-tox-linters
         - stx-virt-pylint
     gate:
       jobs:
-        - local-tox-pep8
-        - openstack-tox-linters
+        - stx-tox-pep8
+        - stx-tox-linters
         - stx-virt-pylint
     post:
       jobs:
         - stx-virt-upload-git-mirror
-
-- job:
-    name: local-tox-pep8
-    parent: openstack-tox-pep8
-    description: |
-      Run Tox pep8 tests on debian-bullseye
-    nodeset: debian-bullseye
 
 # This is the common base job definition for StarlingX flock services
 - job:
