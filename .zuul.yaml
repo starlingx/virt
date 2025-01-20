@@ -5,13 +5,13 @@
       - stx-release-notes-jobs
     check:
       jobs:
-        - stx-tox-pep8
-        - stx-tox-linters
+        - starlingx-common-tox-pep8
+        - starlingx-common-tox-linters
         - stx-virt-pylint
     gate:
       jobs:
-        - stx-tox-pep8
-        - stx-tox-linters
+        - starlingx-common-tox-pep8
+        - starlingx-common-tox-linters
         - stx-virt-pylint
     post:
       jobs:
