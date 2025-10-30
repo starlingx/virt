@@ -7,15 +7,17 @@ Commit carried over from pre-CentOS
 
 Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
 Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+[ Fixed pointers while porting patch to libvirt v8.0.0-1 ]
+Signed-off-by: Daniel Caires <danielmarques.caires@windriver.com>
 ---
  src/qemu/qemu_domain.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/qemu/qemu_domain.c b/src/qemu/qemu_domain.c
-index 0765dc72d..72cccd1e9 100644
+index a8401bac3..f65dcece6 100644
 --- a/src/qemu/qemu_domain.c
 +++ b/src/qemu/qemu_domain.c
-@@ -6339,7 +6339,7 @@ qemuDomainLogContextPtr qemuDomainLogContextNew(virQEMUDriverPtr driver,
+@@ -6583,7 +6583,7 @@ qemuDomainLogContext *qemuDomainLogContextNew(virQEMUDriver *driver,
          if (ctxt->writefd < 0)
              goto error;
      } else {
@@ -24,7 +26,7 @@ index 0765dc72d..72cccd1e9 100644
              virReportSystemError(errno, _("failed to create logfile %s"),
                                   ctxt->path);
              goto error;
-@@ -6506,7 +6506,7 @@ qemuDomainLogAppendMessage(virQEMUDriverPtr driver,
+@@ -6750,7 +6750,7 @@ qemuDomainLogAppendMessage(virQEMUDriver *driver,
                                               vm->def->name, path, message, 0) < 0)
              goto cleanup;
      } else {
@@ -33,7 +35,7 @@ index 0765dc72d..72cccd1e9 100644
              virReportSystemError(errno, _("failed to create logfile %s"),
                                   path);
              goto cleanup;
-@@ -11060,7 +11060,7 @@ virQEMUFileOpenAs(uid_t fallback_uid,
+@@ -11227,7 +11227,7 @@ virQEMUFileOpenAs(uid_t fallback_uid,
              goto error;
          }
      } else {
@@ -43,5 +45,5 @@ index 0765dc72d..72cccd1e9 100644
              /* If we failed as root, and the error was permission-denied
                 (EACCES or EPERM), assume it's on a network-connected share
 -- 
-2.25.1
+2.34.1
 

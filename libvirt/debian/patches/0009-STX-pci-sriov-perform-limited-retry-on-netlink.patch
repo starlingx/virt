@@ -14,7 +14,7 @@ Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
  1 file changed, 62 insertions(+), 38 deletions(-)
 
 diff --git a/src/util/virnetdev.c b/src/util/virnetdev.c
-index a73e5f72f..f787b4919 100644
+index d93b2c6a8..55eb798b6 100644
 --- a/src/util/virnetdev.c
 +++ b/src/util/virnetdev.c
 @@ -36,6 +36,7 @@
@@ -25,7 +25,7 @@ index a73e5f72f..f787b4919 100644
  
  #ifdef __linux__
  # include <linux/sockios.h>
-@@ -1533,6 +1534,8 @@ static struct nla_policy ifla_vfstats_policy[IFLA_VF_STATS_MAX+1] = {
+@@ -1509,6 +1510,8 @@ static struct nla_policy ifla_vfstats_policy[IFLA_VF_STATS_MAX+1] = {
      [IFLA_VF_STATS_MULTICAST]   = { .type = NLA_U64 },
  };
  
@@ -34,7 +34,7 @@ index a73e5f72f..f787b4919 100644
  
  static int
  virNetDevSetVfConfig(const char *ifname, int vf,
-@@ -1540,6 +1543,7 @@ virNetDevSetVfConfig(const char *ifname, int vf,
+@@ -1516,6 +1519,7 @@ virNetDevSetVfConfig(const char *ifname, int vf,
                       bool *allowRetry)
  {
      int rc = -1;
@@ -42,7 +42,7 @@ index a73e5f72f..f787b4919 100644
      char macstr[VIR_MAC_STRING_BUFLEN];
      g_autofree struct nlmsghdr *resp = NULL;
      struct nlmsgerr *err;
-@@ -1602,50 +1606,53 @@ virNetDevSetVfConfig(const char *ifname, int vf,
+@@ -1574,50 +1578,53 @@ virNetDevSetVfConfig(const char *ifname, int vf,
      nla_nest_end(nl_msg, vfinfo);
      nla_nest_end(nl_msg, vfinfolist);
  
@@ -134,7 +134,7 @@ index a73e5f72f..f787b4919 100644
   cleanup:
      VIR_DEBUG("RTM_SETLINK %s vf %d MAC=%s vlanid=%d - %s",
                ifname, vf,
-@@ -1664,6 +1671,23 @@ virNetDevSetVfConfig(const char *ifname, int vf,
+@@ -1636,6 +1643,23 @@ virNetDevSetVfConfig(const char *ifname, int vf,
      virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
                     _("allocated netlink buffer is too small"));
      goto cleanup;
@@ -159,5 +159,5 @@ index a73e5f72f..f787b4919 100644
  
  /**
 -- 
-2.25.1
+2.34.1
 

@@ -1,13 +1,3 @@
-CVE-2021-3631.patch
-CVE-2021-3667.patch
-CVE-2021-3975.patch
-libxl-Fix-domain-shutdown.patch
-CVE-2021-4147_1.patch
-CVE-2021-4147_2.patch
-CVE-2021-4147_3.patch
-CVE-2021-4147_4.patch
-CVE-2021-4147_5.patch
-CVE-2021-4147_6.patch
 CVE-2022-0897.patch
 CVE-2024-1441.patch
 CVE-2024-2496.patch
@@ -21,10 +11,3 @@ CVE-2024-2494.patch
 0007-STX-Stop-processing-memory-stats-if-balloon-info.patch
 0008-STX-Increase-timeout-for-connecting-to-monitor.patch
 0009-STX-pci-sriov-perform-limited-retry-on-netlink.patch
-0010-qemu-capabilities-Introduce-QEMU_CAPS_OBJECT_QAPIFIE.patch
-0011-qemu-monitor-Make-wrapping-of-props-of-object-add-op.patch
-0012-qemuMonitorCreateObjectPropsWrap-Open-code-in-qemuBu.patch
-0013-qemu-monitor-Don-t-add-props-wrapper-if-qemu-has-QEM.patch
-0014-qemu-remove-support-for-generating-yes-no-boolean-op.patch
-0015-qemu-command-Use-JSON-for-QAPIfied-object-directly.patch
-0016-qemu-capabilities-Enable-detection-of-QEMU_CAPS_OBJE.patch
