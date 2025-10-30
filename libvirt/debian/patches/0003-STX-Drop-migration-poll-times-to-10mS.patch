@@ -5,15 +5,17 @@ Subject: [PATCH] STX: Drop migration poll times to 10mS
 
 Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
 Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+[ Fixed pointers while porting patch to libvirt v8.0.0-1 ]
+Signed-off-by: Daniel Caires <danielmarques.caires@windriver.com>
 ---
  src/qemu/qemu_migration.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/qemu/qemu_migration.c b/src/qemu/qemu_migration.c
-index 5353c7ee0..741ab986a 100644
+index 2635ef116..7b1b53ca7 100644
 --- a/src/qemu/qemu_migration.c
 +++ b/src/qemu/qemu_migration.c
-@@ -1846,8 +1846,8 @@ qemuMigrationSrcWaitForCompletion(virQEMUDriverPtr driver,
+@@ -1899,8 +1899,8 @@ qemuMigrationSrcWaitForCompletion(virQEMUDriver *driver,
                  return -2;
              }
          } else {
@@ -25,5 +27,5 @@ index 5353c7ee0..741ab986a 100644
              virObjectUnlock(vm);
              nanosleep(&ts, NULL);
 -- 
-2.25.1
+2.34.1
 
