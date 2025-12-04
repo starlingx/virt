@@ -1,11 +1,11 @@
 ---
 debname: libvirt
-debver: 8.0.0-1
+debver: 11.3.0-2
 dl_path:
-  name: libvirt-debian-8.0.0-1.tar.gz
-  url: https://salsa.debian.org/libvirt-team/libvirt/-/archive/debian/8.0.0-1/libvirt-debian-8.0.0-1.tar.gz
-  md5sum: a1cea29706702eddb94d47d375e66bab
-  sha256sum: 6f29b22ec3f63e708c47cf6d66c7d9fa4b51d6261f8463cea7d11bd487f9c2cd
+  name: libvirt-debian-11.3.0-2.tar.gz
+  url: https://salsa.debian.org/libvirt-team/libvirt/-/archive/debian/11.3.0-2/libvirt-debian-11.3.0-2.tar.gz
+  md5sum: 855cbff8068c2c665acd9690b330a97e
+  sha256sum: 20b9176acb23d498d467187d9ce9465e4442fc3d9d90d221ee05d213a57736a8
 src_files:
   - libvirt/libvirt.logrotate
   - libvirt/libvirt.lxc
@@ -14,4 +14,4 @@ src_files:
 revision:
   dist: $STX_DIST
   GITREVCOUNT:
-    BASE_SRCREV: d00a058faba08888a085611f6fa968184173df3e
+    BASE_SRCREV: 365de7ff2a68fff20d124fe90a90546e3f7e824f

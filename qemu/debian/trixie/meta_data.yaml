@@ -1,7 +1,7 @@
 ---
 debname: qemu
-debver: 1:7.2+dfsg-7+deb12u8
-archive: https://snapshot.debian.org/archive/debian/20241125T204553Z/pool/main/q/qemu/
+debver: 1:10.0.2+ds-1
+archive: https://snapshot.debian.org/archive/debian/20250630T203427Z/pool/main/q/qemu/
 revision:
   dist: $STX_DIST
   GITREVCOUNT:
