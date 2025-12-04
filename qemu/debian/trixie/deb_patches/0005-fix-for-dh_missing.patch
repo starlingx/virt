@@ -1,0 +1,38 @@
+From 92ac85437328dd35bc020b6ea7fbe008e479c38a Mon Sep 17 00:00:00 2001
+From: Jackie Huang <jackie.huang@windriver.com>
+Date: Tue, 13 Jun 2023 07:12:50 +0000
+Subject: [PATCH] fix for dh_missing
+
+Signed-off-by: Jackie Huang <jackie.huang@windriver.com>
+---
+ debian/not-installed              | 3 +++
+ debian/qemu-system-common.install | 2 ++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/debian/not-installed b/debian/not-installed
+index b691757c..a7fb0fb1 100644
+--- a/debian/not-installed
++++ b/debian/not-installed
+@@ -15,3 +15,6 @@ usr/bin/qemu-edid
+ # this one might be helpful for qemu-system -k <lang>
+ # but is -k flag useful these days?
+ usr/bin/qemu-keymap
++usr/share/locale/*
++usr/bin/qemu-system-*
++usr/share/doc/qemu/user/*
+diff --git a/debian/qemu-system-common.install b/debian/qemu-system-common.install
+index 47ed9d9c..993b7942 100644
+--- a/debian/qemu-system-common.install
++++ b/debian/qemu-system-common.install
+@@ -1,6 +1,8 @@
+ debian/qemu-ifdown etc/
+ debian/tmp/usr/share/man/man1/qemu-system.1
+ debian/tmp/usr/share/qemu/trace-events-all
++debian/tmp/usr/share/qemu/vhost-user/50-qemu-gpu.json
++debian/tmp/usr/lib/qemu/vhost-user-gpu
+ debian/tmp/usr/bin/qemu-pr-helper
+ debian/tmp/usr/share/man/man8/qemu-pr-helper.8
+ debian/tmp/usr/share/man/man7/qemu-qmp-ref.7
+-- 
+2.30.2
+
