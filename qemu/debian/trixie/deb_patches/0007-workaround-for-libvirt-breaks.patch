@@ -1,0 +1,31 @@
+From f202f6d015a5361f2849d72a3fc334da0dc0ae20 Mon Sep 17 00:00:00 2001
+From: Jackie Huang <jackie.huang@windriver.com>
+Date: Thu, 15 Jun 2023 02:27:25 -0700
+Subject: [PATCH] workaround for libvirt breaks
+
+qemu 6.0+ breaks libvirt <7.2(issue with hotplug on attach-device):
+https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1932264
+
+This can be removed if libvirt is upgraded to 7.2+
+
+Signed-off-by: Jackie Huang <jackie.huang@windriver.com>
+---
+ debian/control | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/debian/control b/debian/control
+index faaaef03..2a37ef87 100644
+--- a/debian/control
++++ b/debian/control
+@@ -203,7 +203,7 @@ Package: qemu-system-common
+ Architecture: amd64 arm arm64 armel armhf i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mipsel mips64 mips64el powerpc powerpcspe ppc64 ppc64el riscv64 s390x sparc sparc64 x32
+ Multi-Arch: no
+ Replaces: qemu-system-data (<< 1:3.1+dfsg-1~), qemu-utils (<< 1:3.1+dfsg-3~)
+-Breaks:   qemu-system-data (<< 1:3.1+dfsg-1~), qemu-utils (<< 1:3.1+dfsg-3~), libvirt-daemon (<< 7.2.0-1)
++Breaks:   qemu-system-data (<< 1:3.1+dfsg-1~), qemu-utils (<< 1:3.1+dfsg-3~),
+ Depends: ${misc:Depends}, ${shlibs:Depends},
+ # to fix wrong acl for newly created device node on ubuntu:
+ Description: QEMU full system emulation binaries (common files)
+-- 
+2.39.0
+

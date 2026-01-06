@@ -1,0 +1,7 @@
+# 0001-Customize-Debian-build-files-for-STX.patch
+# 0002-remove-xen-build-for-STX.patch
+# 0003-rules-remove-vof.patch
+# 0004-add-condition-for-dh_installdocs.patch
+# 0005-fix-for-dh_missing.patch
+# 0006-remove-dependency-on-qemu-system-ARCH.patch
+# 0007-workaround-for-libvirt-breaks.patch

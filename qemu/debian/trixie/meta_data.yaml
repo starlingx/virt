@@ -1,0 +1,8 @@
+---
+debname: qemu
+debver: 1:10.0.2+ds-1
+archive: https://snapshot.debian.org/archive/debian/20250630T203427Z/pool/main/q/qemu/
+revision:
+  dist: $STX_DIST
+  GITREVCOUNT:
+    BASE_SRCREV: 6c31d19c898a666c597a439cd70d431ca52fd9e3

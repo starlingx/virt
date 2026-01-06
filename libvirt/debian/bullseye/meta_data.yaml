@@ -1,0 +1,17 @@
+---
+debname: libvirt
+debver: 8.0.0-1
+dl_path:
+  name: libvirt-debian-8.0.0-1.tar.gz
+  url: https://salsa.debian.org/libvirt-team/libvirt/-/archive/debian/8.0.0-1/libvirt-debian-8.0.0-1.tar.gz
+  md5sum: a1cea29706702eddb94d47d375e66bab
+  sha256sum: 6f29b22ec3f63e708c47cf6d66c7d9fa4b51d6261f8463cea7d11bd487f9c2cd
+src_files:
+  - libvirt/libvirt.logrotate
+  - libvirt/libvirt.lxc
+  - libvirt/libvirt.qemu
+  - libvirt/hooks/qemu
+revision:
+  dist: $STX_DIST
+  GITREVCOUNT:
+    BASE_SRCREV: d00a058faba08888a085611f6fa968184173df3e

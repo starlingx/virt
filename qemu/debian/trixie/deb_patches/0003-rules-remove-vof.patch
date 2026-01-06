@@ -1,0 +1,35 @@
+From 5b3c6ce515cd027eaf9ccf3a8b4b7b8ce019f1ff Mon Sep 17 00:00:00 2001
+From: Jackie Huang <jackie.huang@windriver.com>
+Date: Tue, 13 Jun 2023 05:43:47 +0000
+Subject: [PATCH 1/2] rules: remove vof
+
+build-vof for powerpc64 is newly added in 7.2, not used.
+
+Signed-off-by: Jackie Huang <jackie.huang@windriver.com>
+---
+ debian/rules | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/debian/rules b/debian/rules
+index 6743f90a..67549c4d 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -400,15 +400,6 @@ endif
+ ### firmware, qemu-user-data package
+ 
+ 
+-build-vof: b/vof/vof.bin
+-b/vof/vof.bin: | b
+-	mkdir -p b/vof
+-	printf 'CC=$${CROSS}gcc\nLD=$${CROSS}ld\nOBJCOPY=$${CROSS}objcopy\nEXTRA_CFLAGS=-m32 -mbig-endian' > b/vof/config.mak
+-	${MAKE} -C b/vof CROSS=${PPC64_CROSSPFX} SRC_DIR=../../pc-bios/vof -f../../pc-bios/vof/Makefile
+-install-vof: b/vof/vof.bin
+-	install -m 0644 -t ${sysdataidir} $<
+-sysdata-components += vof
+-
+ ### x86 optionrom
+ build-x86-optionrom: b/optionrom/built
+ b/optionrom/built:
+-- 
+2.30.2
+
