@@ -14,4 +14,4 @@ src_files:
 revision:
   dist: $STX_DIST
   GITREVCOUNT:
-    BASE_SRCREV: 365de7ff2a68fff20d124fe90a90546e3f7e824f
+    BASE_SRCREV: d00a058faba08888a085611f6fa968184173df3e
