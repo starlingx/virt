@@ -1,0 +1,38 @@
+From f6e149ddf3776ee06278a16e4a427e4fb7aef01c Mon Sep 17 00:00:00 2001
+From: Jim Somerville <Jim.Somerville@windriver.com>
+Date: Fri, 10 Apr 2026 13:23:52 -0300
+Subject: [PATCH] STX: virtio-serial: don't touch virtqueue if vm is
+ stopped
+
+During migration there is a window where virtio-serial data has been
+transmitted to the receiving side, but the region caches haven't been
+initialized there yet. This causes an assertion fail crash.
+
+Replace virtio_queue_ready check with vdev->vm_running to ensure
+the vm is running before touching the virtqueue.
+
+Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
+[ Trimmed the shortlog ]
+Signed-off-by: Rafael Falcao <Rafael.VieiraFalcao@windriver.com>
+[Rebased to qemu 10.0.8 for Trixie]
+Signed-off-by: cbohlhal <Caique.BohlhalterdeSouza@windriver.com>
+---
+ hw/char/virtio-serial-bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hw/char/virtio-serial-bus.c b/hw/char/virtio-serial-bus.c
+index b6d2743a9c..0e8dd1cd3d 100644
+--- a/hw/char/virtio-serial-bus.c
++++ b/hw/char/virtio-serial-bus.c
+@@ -310,7 +310,7 @@ size_t virtio_serial_guest_ready(VirtIOSerialPort *port)
+     VirtQueue *vq = port->ivq;
+     unsigned int bytes;
+ 
+-    if (!virtio_queue_ready(vq) ||
++    if (!vdev->vm_running ||
+         !(vdev->status & VIRTIO_CONFIG_S_DRIVER_OK) ||
+         virtio_queue_empty(vq)) {
+         return 0;
+-- 
+2.34.1
+
