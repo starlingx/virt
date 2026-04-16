@@ -1,13 +1,5 @@
-# CVE-2022-0897.patch
-# CVE-2024-1441.patch
-# CVE-2024-2496.patch
-# CVE-2024-2494.patch
 0001-STX-CPU-pinning-not-working-over-live-migration.patch
-# 0002-STX-System-Logging-set-group-read-permission-on-log.patch
-# 0003-STX-Drop-migration-poll-times-to-10mS.patch
-# 0004-STX-DPDK-parms-handling.patch
-# 0005-STX-Fixed-default-libvirtd-systemd-service.patch
-# 0006-STX-Adding-systemd-dependencies-against-pmon.service.patch
-# 0007-STX-Stop-processing-memory-stats-if-balloon-info.patch
-# 0008-STX-Increase-timeout-for-connecting-to-monitor.patch
-# 0009-STX-pci-sriov-perform-limited-retry-on-netlink.patch
+0002-STX-System-Logging-set-group-read-permission-on-log.patch
+0003-STX-Fixed-default-libvirtd-systemd-service-for-pmon.patch
+0004-STX-Stop-processing-memory-stats-if-balloon-fails.patch
+0005-STX-pci-sriov-perform-limited-retry-on-netlink.patch
