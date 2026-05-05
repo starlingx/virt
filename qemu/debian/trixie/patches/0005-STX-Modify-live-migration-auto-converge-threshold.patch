@@ -1,0 +1,38 @@
+From 985a82dfd53a2b5d46b7577675809961d56b0cef Mon Sep 17 00:00:00 2001
+From: Jim Somerville <Jim.Somerville@windriver.com>
+Date: Fri, 10 Apr 2026 13:22:08 -0300
+Subject: [PATCH] STX: Modify live migration auto-converge threshold
+
+Currently the live migration auto-converge can throttle a VM
+vcpus time to 99%. This value for max cpu throttling percentage
+causes some detaches to fail. Based on characterization results,
+we set this value to 92.
+
+File moved from softmmu/cpu-throttle.c to migration/cpu-throttle.c
+in qemu 10.0.8.
+
+Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
+[ Trimmed the shortlog ]
+Signed-off-by: Rafael Falcao <Rafael.VieiraFalcao@windriver.com>
+[Rebased to qemu 10.0.8 for Trixie]
+Signed-off-by: cbohlhal <Caique.BohlhalterdeSouza@windriver.com>
+---
+ migration/cpu-throttle.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/migration/cpu-throttle.c b/migration/cpu-throttle.c
+index 0642e6bdea..e164380281 100644
+--- a/migration/cpu-throttle.c
++++ b/migration/cpu-throttle.c
+@@ -39,7 +39,7 @@ static bool throttle_dirty_sync_timer_active;
+ static uint64_t throttle_dirty_sync_count_prev;
+ 
+ #define CPU_THROTTLE_PCT_MIN 1
+-#define CPU_THROTTLE_PCT_MAX 99
++#define CPU_THROTTLE_PCT_MAX 92
+ #define CPU_THROTTLE_TIMESLICE_NS 10000000
+ 
+ /* Making sure RAMBlock dirty bitmap is synchronized every five seconds */
+-- 
+2.34.1
+

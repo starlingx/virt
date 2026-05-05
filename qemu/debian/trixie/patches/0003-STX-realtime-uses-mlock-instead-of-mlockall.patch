@@ -1,0 +1,79 @@
+From 74ff4d39e599654a673eef30e18fd22a714a5b8b Mon Sep 17 00:00:00 2001
+From: Jim Somerville <Jim.Somerville@windriver.com>
+Date: Fri, 10 Apr 2026 13:18:44 -0300
+Subject: [PATCH] STX: realtime uses mlock instead of mlockall
+
+This enhances qemu to use mlock() instead of mlockall() when
+realtime mlock is enabled, so that memory is engineerable.
+
+mlockall() is not practically engineerable since it requires significant
+4K reserved memory per process. Using mlock() only in ram_block_add(),
+we no longer lock stack / data, shared libraries, and heap.
+
+Files moved from softmmu/ to system/ in qemu 10.0.8:
+- softmmu/physmem.c -> system/physmem.c
+- softmmu/vl.c -> system/vl.c
+
+Adapted to new mlock API: enable_mlock replaced by mlock_state
+with should_mlock() in qemu 10.0.8.
+
+The original file_ram_alloc MAP_LOCKED change was not ported as
+qemu_ram_mmap API changed significantly. The mlock() per block
+in ram_block_add combined with disabling os_mlock() in
+realtime_init achieves the same result.
+
+Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
+Signed-off-by: Rafael Falcao <Rafael.VieiraFalcao@windriver.com>
+[Rebased original changes to the qemu 7.2 version]
+Signed-off-by: david.liu <david.liu@windriver.com>
+[Rebased to qemu 10.0.8 for Trixie]
+Signed-off-by: cbohlhal <Caique.BohlhalterdeSouza@windriver.com>
+---
+ system/physmem.c | 6 ++++++
+ system/vl.c      | 6 ++----
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/system/physmem.c b/system/physmem.c
+index 0c2652c25a..97c0a02f43 100644
+--- a/system/physmem.c
++++ b/system/physmem.c
+@@ -55,6 +55,7 @@
+ #include "system/dma.h"
+ #include "system/hostmem.h"
+ #include "system/hw_accel.h"
++#include "system/system.h"
+ #include "system/xen-mapcache.h"
+ #include "trace.h"
+ 
+@@ -1958,6 +1959,11 @@ static void ram_block_add(RAMBlock *new_block, Error **errp)
+         }
+         ram_block_notify_add(new_block->host, new_block->used_length,
+                              new_block->max_length);
++        if (should_mlock(mlock_state)) {
++            if (mlock(new_block->host, new_block->max_length) < 0) {
++                perror("mlock");
++            }
++        }
+     }
+     return;
+ 
+diff --git a/system/vl.c b/system/vl.c
+index fdc664ba16..9568f64922 100644
+--- a/system/vl.c
++++ b/system/vl.c
+@@ -800,10 +800,8 @@ static QemuOptsList qemu_run_with_opts = {
+ static void realtime_init(void)
+ {
+     if (should_mlock(mlock_state)) {
+-        if (os_mlock(is_mlock_on_fault(mlock_state)) < 0) {
+-            error_report("locking memory failed");
+-            exit(1);
+-        }
++        /* WRS - do not call os_mlock(), prevent call to mlockall */
++        ;
+     }
+ }
+ 
+-- 
+2.34.1
+

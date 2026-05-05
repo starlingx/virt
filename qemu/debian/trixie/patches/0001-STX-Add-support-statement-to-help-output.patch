@@ -1,41 +1,29 @@
-From d8d9a42d7e243f0874f77c0fc932f32ecbde42e6 Mon Sep 17 00:00:00 2001
+From 0fbdeaff336234574b3d05747b4c873d4abf95a2 Mon Sep 17 00:00:00 2001
 From: Eduardo Habkost <ehabkost@redhat.com>
-Date: Fri, 26 Apr 2019 17:41:04 -0300
+Date: Fri, 10 Apr 2026 12:43:52 -0300
 Subject: [PATCH] STX: Add support statement to -help output
 
-RH-Author: Eduardo Habkost <ehabkost@redhat.com>
-Message-id: <1386183197-27761-1-git-send-email-ehabkost@redhat.com>
-Patchwork-id: 55994
-O-Subject: [qemu-kvm RHEL7 PATCH] Add support statement to -help output
-Bugzilla: 972773
-RH-Acked-by: Miroslav Rezanina <mrezanin@redhat.com>
-RH-Acked-by: knoel@redhat.com
-RH-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-
-Bugzilla: 972773
-Brew scratch build:
-http://brewweb.devel.redhat.com/brew/taskinfo?taskID=6676272
-
 Add support statement to -help output, reporting direct qemu-kvm usage
-as unsupported by Red Hat, and advising users to use libvirt instead.
+as unsupported by StarlingX, and advising users to use libvirt instead.
 
-Change the above to say StarlingX instead of Red Hat.
-STX-Author: Jim Somerville <Jim.Somerville@windriver.com>
+File moved from softmmu/vl.c to system/vl.c in qemu 10.0.8.
 
 Signed-off-by: Eduardo Habkost <ehabkost@redhat.com>
 Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
 Signed-off-by: Rafael Falcao <Rafael.VieiraFalcao@windriver.com>
 [Rebased original changes to the qemu 7.2 version]
 Signed-off-by: david.liu <david.liu@windriver.com>
+[Rebased to qemu 10.0.8 for Trixie]
+Signed-off-by: cbohlhal <Caique.BohlhalterdeSouza@windriver.com>
 ---
- softmmu/vl.c | 9 +++++++++
+ system/vl.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
-diff --git a/softmmu/vl.c b/softmmu/vl.c
-index 5115221e..a1720fe4 100644
---- a/softmmu/vl.c
-+++ b/softmmu/vl.c
-@@ -834,9 +834,17 @@ static void version(void)
+diff --git a/system/vl.c b/system/vl.c
+index ec93988a03..fdc664ba16 100644
+--- a/system/vl.c
++++ b/system/vl.c
+@@ -870,9 +870,17 @@ static void version(void)
             QEMU_COPYRIGHT "\n");
  }
  
@@ -53,7 +41,7 @@ index 5115221e..a1720fe4 100644
      printf("usage: %s [options] [disk_image]\n\n"
             "'disk_image' is a raw hard disk image for IDE hard disk 0\n\n",
              g_get_prgname());
-@@ -862,6 +870,7 @@ static void help(int exitcode)
+@@ -898,6 +906,7 @@ static void help(int exitcode)
             "\n"
             QEMU_HELP_BOTTOM "\n");
  
@@ -62,5 +50,5 @@ index 5115221e..a1720fe4 100644
  }
  
 -- 
-2.30.2
+2.34.1
 
