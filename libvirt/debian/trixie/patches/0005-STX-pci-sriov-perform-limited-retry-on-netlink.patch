@@ -1,0 +1,116 @@
+From e1c144982f9c35017dc1aed0f08d7d69d851a5e5 Mon Sep 17 00:00:00 2001
+From: Jim Somerville <Jim.Somerville@windriver.com>
+Date: Sun, 25 Feb 2018 11:32:54 -0500
+Subject: [PATCH] STX: pci-sriov perform limited retry on netlink
+
+We now also perform retries on other netlink errors that previously
+would have just done an immediate bailout.
+
+Signed-off-by: Jim Somerville <Jim.Somerville@windriver.com>
+[ Trimmed shortlog ]
+Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
+[ Ported to libvirt v11.3.0-3+deb13u2 ]
+Signed-off-by: Murillo Arantes <murillo.arantes@windriver.com>
+---
+ src/util/virnetdev.c | 60 +++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 45 insertions(+), 15 deletions(-)
+
+diff --git a/src/util/virnetdev.c b/src/util/virnetdev.c
+index 8ae854245..5a2feb411 100644
+--- a/src/util/virnetdev.c
++++ b/src/util/virnetdev.c
+@@ -38,6 +38,7 @@
+ # include <sys/ioctl.h>
+ #endif
+ #include <fcntl.h>
++#include <time.h>
+ 
+ #ifdef __linux__
+ # include <linux/sockios.h>
+@@ -1501,6 +1502,9 @@ static struct nla_policy ifla_vfstats_policy[IFLA_VF_STATS_MAX+1] = {
+     [IFLA_VF_STATS_MULTICAST]   = { .type = NLA_U64 },
+ };
+ 
++#define VIR_NET_DEV_NUM_RETRY 3
++#define VIR_NET_DEV_DELAY_NS  250000000
++
+ int
+ virNetDevSendVfSetLinkRequest(const char *ifname,
+                               int vfInfoType,
+@@ -1508,6 +1512,7 @@ virNetDevSendVfSetLinkRequest(const char *ifname,
+                               const size_t payloadLen)
+ {
+     int rc = -1;
++    int i;
+     g_autofree struct nlmsghdr *resp = NULL;
+     struct nlmsgerr *err = NULL;
+     unsigned int recvbuflen = 0;
+@@ -1539,25 +1544,50 @@ virNetDevSendVfSetLinkRequest(const char *ifname,
+     nla_nest_end(nl_msg, vfinfo);
+     nla_nest_end(nl_msg, vfinfolist);
+ 
+-    if (virNetlinkCommand(nl_msg, &resp, &recvbuflen, 0, 0,
+-                          NETLINK_ROUTE, 0) < 0)
+-        goto cleanup;
++    for (i = 0; i < VIR_NET_DEV_NUM_RETRY; i++) {
++        g_clear_pointer(&resp, g_free);
++        recvbuflen = 0;
+ 
+-    if (recvbuflen < NLMSG_LENGTH(0) || resp == NULL)
+-        goto malformed_resp;
++        if (virNetlinkCommand(nl_msg, &resp, &recvbuflen, 0, 0,
++                            NETLINK_ROUTE, 0) < 0)
++            goto cleanup;
+ 
+-    switch (resp->nlmsg_type) {
+-    case NLMSG_ERROR:
+-        err = (struct nlmsgerr *)NLMSG_DATA(resp);
+-        if (resp->nlmsg_len < NLMSG_LENGTH(sizeof(*err)))
++        if (recvbuflen < NLMSG_LENGTH(0) || resp == NULL)
+             goto malformed_resp;
+-        rc = err->error;
+-        break;
+-    case NLMSG_DONE:
+-        rc = 0;
++
++        switch (resp->nlmsg_type) {
++        case NLMSG_ERROR:
++            err = (struct nlmsgerr *)NLMSG_DATA(resp);
++            if (resp->nlmsg_len < NLMSG_LENGTH(sizeof(*err)))
++                goto malformed_resp;
++            if (err->error) {
++                rc = err->error;
++                goto retry;
++            }
++            rc = 0;
++            break;
++        case NLMSG_DONE:
++            rc = 0;
++            break;
++        default:
++            goto malformed_resp;
++        }
+         break;
+-    default:
+-        goto malformed_resp;
++
++     retry:
++        VIR_ERROR(_("RTM_SETLINK retry %1$d for ifname %2$s"),
++                  i, ifname ? ifname : "(unspecified)");
++        {
++            static struct timespec delay = {
++                .tv_sec = 0,
++                .tv_nsec = VIR_NET_DEV_DELAY_NS,
++            };
++
++            if (nanosleep(&delay, NULL) < 0) {
++                virReportSystemError(errno, "%s", _("Failed to sleep"));
++                goto cleanup;
++            }
++        }
+     }
+ 
+  cleanup:
+-- 
+2.34.1
+

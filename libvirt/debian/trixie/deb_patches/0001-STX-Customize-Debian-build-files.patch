@@ -1,4 +1,4 @@
-From b3341ac524d1ff53554c45833650200b59b72431 Mon Sep 17 00:00:00 2001
+From 735775241b770131f71135de0f7a7f4bc15da393 Mon Sep 17 00:00:00 2001
 From: Thales Elero Cervi <thaleselero.cervi@windriver.com>
 Date: Wed, 9 Nov 2022 09:07:21 -0300
 Subject: [PATCH] STX: Customize Debian build files
@@ -14,43 +14,45 @@ delivered on CentOS, adding to the following:
 Signed-off-by: Thales Elero Cervi <thaleselero.cervi@windriver.com>
 [ Fixed function renaming while porting patch to libvirt v8.0.0-1 ]
 Signed-off-by: Murillo Arantes <murillo.arantes@windriver.com>
+[ Ported to libvirt v11.3.0-3+deb13u2 ]
+Signed-off-by: Murillo Arantes <murillo.arantes@windriver.com>
 ---
- debian/libvirt-daemon-system.install |  1 +
- debian/rules                         | 23 +++++++++++++++++++++++
+ debian/libvirt-daemon.install.in |  1 +
+ debian/rules                     | 23 +++++++++++++++++++++++
  2 files changed, 24 insertions(+)
 
-diff --git a/debian/libvirt-daemon-system.install b/debian/libvirt-daemon-system.install
-index c75e3c8c8..36c03176e 100644
---- a/debian/libvirt-daemon-system.install
-+++ b/debian/libvirt-daemon-system.install
-@@ -2,6 +2,7 @@ etc/default/libvirt-guests
- etc/default/libvirtd
- etc/default/virtlockd
- etc/default/virtlogd
-+etc/libvirt/hooks/qemu
+diff --git a/debian/libvirt-daemon.install.in b/debian/libvirt-daemon.install.in
+index 2bee02b8c..bce473693 100644
+--- a/debian/libvirt-daemon.install.in
++++ b/debian/libvirt-daemon.install.in
+@@ -1,5 +1,6 @@
+ etc/apparmor.d/usr.sbin.libvirtd
  etc/libvirt/libvirtd.conf
- etc/libvirt/qemu-lockd.conf
- etc/libvirt/qemu.conf
++etc/libvirt/hooks/qemu
+ etc/logrotate.d/libvirtd
+ usr/lib/libvirt/virt-aa-helper
+ usr/lib/systemd/system/libvirtd-admin.socket
 diff --git a/debian/rules b/debian/rules
-index 2b5339a45..3f29f8d90 100755
+index 868b31876..566c6aaf8 100755
 --- a/debian/rules
 +++ b/debian/rules
-@@ -15,6 +15,11 @@ DEB_LDFLAGS_MAINT_STRIP = -Wl,-Bsymbolic-functions
- DPKG_EXPORT_BUILDFLAGS = 1
- include /usr/share/dpkg/buildflags.mk
+@@ -18,6 +18,11 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL
+ 
+ include debian/arches.mk
  
 +SOURCE1                   = libvirt.logrotate
 +SOURCE2                   = libvirt.lxc
 +SOURCE3                   = libvirt.qemu
 +SOURCE4                   = qemu
 +
- ARCHES_LXC  = alpha amd64 arm64 armel armhf hppa i386 m68k mips64el mipsel powerpc ppc64 ppc64el riscv64 s390x sh4 sparc64 x32
- ARCHES_XEN  = amd64 arm64 armhf i386
- ARCHES_VBOX = amd64 i386
-@@ -261,6 +266,24 @@ execute_after_dh_auto_install:
- 	   $(DEB_DESTDIR)/etc/libvirt/nwfilter/ \
- 	   $(DEB_DESTDIR)/usr/share/libvirt/
- 
+ ifeq ($(DEB_HOST_ARCH_OS), linux)
+     WITH_DAEMONS              = -Ddriver_libvirtd=enabled -Dhost_validate=enabled -Dssh_proxy=enabled
+     WITH_ESX                  = -Ddriver_esx=enabled -Dcurl=enabled
+@@ -275,6 +280,24 @@ ifeq ($(DEB_HOST_ARCH_OS), linux)
+ 	mkdir -p $(DEB_DESTDIR)/etc/apt/apt.conf.d/
+ 	cp debian/apt/* \
+ 	   $(DEB_DESTDIR)/etc/apt/apt.conf.d/
++
 +	# STX: Begin custom install
 +	# Enable syslog for libvirtd (/var/log/libvirtd.log)
 +	echo "log_outputs=\"3:syslog:libvirtd\"" >> $(DEB_DESTDIR)/etc/libvirt/libvirtd.conf
@@ -68,10 +70,9 @@ index 2b5339a45..3f29f8d90 100755
 +	mkdir -p $(DEB_DESTDIR)/etc/libvirt/hooks
 +	install -m 0500 $(SOURCE4) $(DEB_DESTDIR)/etc/libvirt/hooks/qemu
 +	# STX: End custom install
-+
- execute_after_dh_install:
- ifneq (,$(findstring $(DEB_HOST_ARCH_OS), linux))
- 	# Linux supports more nice things:
+ endif
+ 
+ 	# Copy the release notes where dh_installdocs can find them
 -- 
 2.34.1
 
