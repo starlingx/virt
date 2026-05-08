@@ -1,0 +1,173 @@
+From b5bc4194dd443298d6dd11e1cb775fd41f685636 Mon Sep 17 00:00:00 2001
+From: cbohlhal <Caique.BohlhalterdeSouza@windriver.com>
+Date: Tue, 5 May 2026 11:55:52 -0300
+Subject: [PATCH] STX: Remove wireshark from libvirt build
+
+Remove the libwireshark-dev build dependency and the libvirt-wireshark
+binary package from the libvirt Debian build for Trixie. The wireshark
+dissector is not used by any StarlingX component and is not installed
+in any Docker image.
+
+While the upstream Debian libvirt 11.3.0-3+deb13u2 still includes
+wireshark support, StarlingX does not require this functionality. This
+change aligns with the removal of libwireshark-dev from the STX tools
+download lists [1] and reduces build dependencies and package bloat.
+
+Changes made:
+- Remove libwireshark-dev from Build-Depends in debian/control and
+  debian/control.in (the template that generates debian/control)
+- Remove the entire Package: libvirt-wireshark block from both files
+- Remove ARCHES_WIRESHARK from debian/arches.mk
+- Remove WITH_WIRESHARK conditional from debian/rules and add explicit
+  -Dwireshark_dissector=disabled to DEB_CONFIGURE_EXTRA_ARGS to ensure
+  deterministic build behavior regardless of the build environment
+- Delete packaging files: libvirt-wireshark.install.in,
+  libvirt-wireshark.links, and libvirt-wireshark.maintscript
+
+[1] https://review.opendev.org/c/starlingx/tools/+/985415
+
+Signed-off-by: cbohlhal <Caique.BohlhalterdeSouza@windriver.com>
+---
+ debian/arches.mk                     |  1 -
+ debian/control                       | 19 -------------------
+ debian/control.in                    | 15 ---------------
+ debian/libvirt-wireshark.install.in  |  1 -
+ debian/libvirt-wireshark.links       |  1 -
+ debian/libvirt-wireshark.maintscript |  1 -
+ debian/rules                         |  7 +------
+ 7 files changed, 1 insertion(+), 44 deletions(-)
+ delete mode 100644 debian/libvirt-wireshark.install.in
+ delete mode 100644 debian/libvirt-wireshark.links
+ delete mode 100644 debian/libvirt-wireshark.maintscript
+
+diff --git a/debian/arches.mk b/debian/arches.mk
+index fa37ff126..802fcad85 100644
+--- a/debian/arches.mk
++++ b/debian/arches.mk
+@@ -4,7 +4,6 @@ ARCHES_QEMU = amd64 arm64 armel armhf i386 loong64 mips64el mipsel powerpc ppc64
+ ARCHES_XEN = amd64 arm64
+ ARCHES_VBOX = amd64 i386
+ ARCHES_DMIDECODE = amd64 arm64 armhf i386 riscv64 loong64 x32
+-ARCHES_WIRESHARK = alpha amd64 arm64 armel armhf hppa i386 loong64 mips64el powerpc ppc64 ppc64el riscv64 s390x sh4 sparc64
+ 
+ # Keep this list empty until we have AppArmor support
+ ARCHES_NBDKIT =
+diff --git a/debian/control b/debian/control
+index 3a583c16c..67b9b69fb 100644
+--- a/debian/control
++++ b/debian/control
+@@ -44,7 +44,6 @@ Build-Depends:
+  libtasn1-6-dev,
+  libtirpc-dev,
+  libudev-dev [linux-any],
+- libwireshark-dev [alpha amd64 arm64 armel armhf hppa i386 loong64 mips64el powerpc ppc64 ppc64el riscv64 s390x sh4 sparc64],
+  libxen-dev [amd64 arm64],
+  libxml2-dev,
+  libxml2-utils,
+@@ -1031,24 +1030,6 @@ Description: virtualization library - SSH proxy
+  running libvirt domains via VSOCK.
+ Homepage: https://libvirt.org/ssh-proxy.html
+ 
+-Package: libvirt-wireshark
+-Section: admin
+-Architecture: alpha amd64 arm64 armel armhf hppa i386 loong64 mips64el powerpc ppc64 ppc64el riscv64 s390x sh4 sparc64
+-Multi-Arch: same
+-Depends:
+- libvirt-common (= ${binary:Version}),
+- libvirt0 (= ${binary:Version}),
+- ${misc:Depends},
+- ${shlibs:Depends},
+-Description: virtualization library - Wireshark dissector
+- libvirt exposes a long-term stable API that can be used to interact with
+- various hypervisors. Its architecture is highly modular, with most features
+- implemented as optional drivers. It can be used from C as well as several
+- other programming languages, and it forms the basis of virtualization
+- solutions tailored for a range of use cases.
+- .
+- This package contains the Wireshark dissector.
+-
+ Package: libvirt-login-shell
+ Section: admin
+ Architecture: linux-any
+diff --git a/debian/control.in b/debian/control.in
+index 737a65a8f..320a915f5 100644
+--- a/debian/control.in
++++ b/debian/control.in
+@@ -44,7 +44,6 @@ Build-Depends:
+  libtasn1-6-dev,
+  libtirpc-dev,
+  libudev-dev [linux-any],
+- libwireshark-dev [${ARCHES_WIRESHARK}],
+  libxen-dev [${ARCHES_XEN}],
+  libxml2-dev,
+  libxml2-utils,
+@@ -883,20 +882,6 @@ Description: virtualization library - SSH proxy
+  running libvirt domains via VSOCK.
+ Homepage: https://libvirt.org/ssh-proxy.html
+ 
+-Package: libvirt-wireshark
+-Section: admin
+-Architecture: ${ARCHES_WIRESHARK}
+-Multi-Arch: same
+-Depends:
+- libvirt-common (= ${binary:Version}),
+- libvirt0 (= ${binary:Version}),
+- ${misc:Depends},
+- ${shlibs:Depends},
+-Description: virtualization library - Wireshark dissector
+- @COMMON_DESCRIPTION@
+- .
+- This package contains the Wireshark dissector.
+-
+ Package: libvirt-login-shell
+ Section: admin
+ Architecture: linux-any
+diff --git a/debian/libvirt-wireshark.install.in b/debian/libvirt-wireshark.install.in
+deleted file mode 100644
+index e95a21833..000000000
+--- a/debian/libvirt-wireshark.install.in
++++ /dev/null
+@@ -1 +0,0 @@
+-usr/lib/${DEB_HOST_MULTIARCH}/wireshark/plugins/*/epan/libvirt.so
+diff --git a/debian/libvirt-wireshark.links b/debian/libvirt-wireshark.links
+deleted file mode 100644
+index 958a13990..000000000
+--- a/debian/libvirt-wireshark.links
++++ /dev/null
+@@ -1 +0,0 @@
+-usr/share/doc/libvirt-common usr/share/doc/libvirt-wireshark
+diff --git a/debian/libvirt-wireshark.maintscript b/debian/libvirt-wireshark.maintscript
+deleted file mode 100644
+index ba814e478..000000000
+--- a/debian/libvirt-wireshark.maintscript
++++ /dev/null
+@@ -1 +0,0 @@
+-dir_to_symlink /usr/share/doc/libvirt-wireshark libvirt-common 10.6.0-2~
+diff --git a/debian/rules b/debian/rules
+index 868b31876..73a6e8aa5 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -121,11 +121,6 @@ ifneq (,$(filter $(DEB_HOST_ARCH), $(ARCHES_VBOX)))
+ else
+     WITH_VBOX                 = -Ddriver_vbox=disabled
+ endif
+-ifneq (,$(filter $(DEB_HOST_ARCH), $(ARCHES_WIRESHARK)))
+-    WITH_WIRESHARK            = -Dwireshark_dissector=enabled
+-else
+-    WITH_WIRESHARK            = -Dwireshark_dissector=disabled
+-endif
+ ifneq (,$(filter $(DEB_HOST_ARCH), $(ARCHES_NBDKIT)))
+     WITH_NBDKIT               = -Dnbdkit=enabled -Dnbdkit_config_default=enabled
+ else
+@@ -211,7 +206,7 @@ DEB_CONFIGURE_EXTRA_ARGS := \
+     $(WITH_ATTR) \
+     $(WITH_NSS_PLUGIN) \
+     $(WITH_NBDKIT) \
+-    $(WITH_WIRESHARK) \
++    -Dwireshark_dissector=disabled \
+     -Dpm_utils=disabled \
+     $(NULL)
+ 
+-- 
+2.34.1
+
