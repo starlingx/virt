@@ -18,7 +18,7 @@ RUN apt-get -y update \
     iptables \
     iproute2 \
     cgroup-tools \
-    libcgroup1 \
+    libcgroup3 \
     libnss-libvirt \
     libvirt0 \
     libvirt-clients \
