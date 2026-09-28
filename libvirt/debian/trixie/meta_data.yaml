@@ -1,11 +1,11 @@
 ---
 debname: libvirt
-debver: 11.3.0-3+deb13u2
+debver: 11.3.0-3+deb13u3
 dl_path:
-  name: libvirt-debian-11.3.0-3+deb13u2.tar.gz
-  url: https://salsa.debian.org/libvirt-team/libvirt/-/archive/debian/11.3.0-3+deb13u2/libvirt-debian-11.3.0-3+deb13u2.tar.gz
-  md5sum: 763b5cb2eade2906eb49f41410843b36
-  sha256sum: 2552b448943c1ca815c12b9a338248e79396f5822e498bf8fa1960b9adf576ae
+  name: libvirt-debian-11.3.0-3+deb13u3.tar.gz
+  url: https://salsa.debian.org/libvirt-team/libvirt/-/archive/debian/11.3.0-3+deb13u3/libvirt-debian-11.3.0-3+deb13u3.tar.gz
+  md5sum: 059c19fe36e067874231fcacd57ee523
+  sha256sum: fa4b602de4d40126c174d7d721c7df8fdfcec758d8970ebc4d870c4ddc3f7869
 src_files:
   - libvirt/libvirt.logrotate
   - libvirt/libvirt.lxc
